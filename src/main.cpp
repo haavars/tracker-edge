@@ -44,9 +44,40 @@ void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const 
 void setup()
 {
     Tracker::instance().init();
+
+    // Register a location callback so we can add temperature and humidity information
+    // to location publishes
+    Tracker::instance().location.regLocGenCallback(locationGenerationCallback);
+
+    // Turn on 5V output on M8 connector
+    pinMode(CAN_PWR, OUTPUT);
+    digitalWrite(CAN_PWR, HIGH);
+    delay(500);
+
+    sensor.begin(CLOCK_SPEED_400KHZ);
+    sensor.start_periodic();
+
+    Particle.connect();
 }
 
 void loop()
 {
     Tracker::instance().loop();
+}
+
+void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context)
+{
+    double temp, humid;
+
+    int err = sensor.get_reading(&temp, &humid);
+    if (err == 0)
+    {
+        writer.name("sh31_temp").value(temp);
+        writer.name("sh31_humid").value(humid);
+
+        Log.info("temp=%.2lf hum=%.2lf", temp, humid);
+    }
+    else {
+        Log.info("no sensor err=%d", err);
+    }
 }
