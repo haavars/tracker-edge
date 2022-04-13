@@ -18,6 +18,7 @@
 
 #include "tracker_config.h"
 #include "tracker.h"
+#include "sht3x-i2c.h"
 
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -35,6 +36,10 @@ SerialLogHandler logHandler(115200, LOG_LEVEL_TRACE, {
     { "ncp.at", LOG_LEVEL_INFO },
     { "net.ppp.client", LOG_LEVEL_INFO },
 });
+
+Sht3xi2c sensor(Wire3, 0x44);
+
+void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context); // Forward declaration
 
 void setup()
 {
